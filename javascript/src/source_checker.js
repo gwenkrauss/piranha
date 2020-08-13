@@ -28,14 +28,21 @@
 
 const fs = require('fs');
 
+const validFileExtensions = ['.js', '.ts']; // .jsx .tsx?
+
+function fileNameExtension(fileName) {
+    return fileName.split('.').slice(-1)[0];
+}
+
 module.exports = {
-    checkSource: function (source_file) {
+    checkSource: function(source_file) {
         if (!fs.existsSync(source_file)) {
             throw new Error(`File ${source_file} not found`);
-        } else if (source_file.split('.').slice(-1)[0] != 'js') {
-            throw new Error(`Input ${source_file} is not a javascript file`);
+        } else if (!validFileExtensions.some((ext) => fileNameExtension(source_file) === ext)) {
+            throw new Error(`Input ${source_file} is not a javascript or typescript file`);
         }
 
         return source_file;
     },
+    fileNameExtension,
 };

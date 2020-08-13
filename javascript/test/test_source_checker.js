@@ -28,7 +28,7 @@ describe('source_checker', () => {
         it('should throw error if source file is not JS.', () => {
             // fs module uses process.cwd() to figure relative path so `npm test` run in root wont't need ../
             expect(checkSource.bind(checkSource, 'config/properties.json', true)).to.throw(
-                'Input config/properties.json is not a javascript file',
+                'Input config/properties.json is not a javascript or typescript file',
             );
         });
     });

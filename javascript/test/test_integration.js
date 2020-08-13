@@ -25,17 +25,73 @@ var checkForPiranhaLiterals = (ast) => {
     var result = false;
 
     estraverse.traverse(ast, {
-        leave: function (node) {
+        leave: function(node) {
             if (node.createdByPiranha !== undefined) {
                 result = true;
             }
         },
+        fallback: 'iteration',
     });
 
     return result;
 };
 
 describe('piranha', () => {
+    describe('#sample.ts', () => {
+        it('featureFlag treated', () => {
+            const code = fs.readFileSync('./test/input/sample.ts', 'utf-8');
+            // piranha.js should configure this corectly
+            const ast = recast.parse(code, { parser: require('recast/parsers/typescript') }).program;
+            const flagname = 'featureFlag';
+            const behaviour = true;
+            const expected_code = fs.readFileSync('./test/treated-expected/sample-featureFlag.ts', 'utf-8');
+
+            const engine = new refactor.RefactorEngine(
+                ast,
+                properties,
+                behaviour,
+                flagname,
+                max_cleanup_steps,
+                false,
+                true,
+            );
+            engine.refactorPipeline();
+            const refactored_code = recast.print(ast).code;
+            console.log(refactored_code);
+            assert(!checkForPiranhaLiterals(ast));
+            assert(
+                expected_code === refactored_code,
+                `\nEXPECTED : ${JSON.stringify(expected_code)}\nREFACTORED : ${JSON.stringify(refactored_code)}`,
+            );
+        });
+
+        // it('featureFlag control', () => {
+        //     const code = fs.readFileSync('./test/input/sample.ts', 'utf-8');
+        //     const ast = recast.parse(code, { parser: require('recast/parsers/typescript') }).program;
+        //     const flagname = 'featureFlag';
+        //     const behaviour = false;
+        //     const expected_code = fs.readFileSync('./test/control-expected/sample-featureFlag.js', 'utf-8');
+
+        //     const engine = new refactor.RefactorEngine(
+        //         ast,
+        //         properties,
+        //         behaviour,
+        //         flagname,
+        //         max_cleanup_steps,
+        //         false,
+        //         true,
+        //     );
+        //     engine.refactorPipeline();
+        //     const refactored_code = recast.print(ast).code;
+
+        //     assert(!checkForPiranhaLiterals(ast));
+        //     assert(
+        //         expected_code === refactored_code,
+        //         `\nEXPECTED : ${JSON.stringify(expected_code)}\nREFACTORED : ${JSON.stringify(refactored_code)}`,
+        //     );
+        // });
+    });
+
     describe('#sample.js', () => {
         it('featureFlag treated', () => {
             const code = fs.readFileSync('./test/input/sample.js', 'utf-8');

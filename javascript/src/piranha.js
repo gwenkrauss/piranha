@@ -110,7 +110,9 @@ if (args.debug != null) {
 
 const keep_comments = args.keep_comments != null;
 
-const ast = recast.parse(fs.readFileSync(filename, 'utf-8')).program;
+const ast = recast.parse(fs.readFileSync(filename, 'utf-8'), {
+    parser: require('recast/parsers/' + source_checker.fileNameExtension(filename) == '.js' ? 'esprima' : 'typescript'),
+}).program;
 
 const engine = new refactor.RefactorEngine(
     ast,
@@ -131,7 +133,7 @@ if (out_file === '') {
     out_file = filename;
 }
 
-fs.writeFile(out_file, recast.print(ast).code, function (err) {
+fs.writeFile(out_file, recast.print(ast).code, function(err) {
     if (err) {
         return console.log(err);
     }

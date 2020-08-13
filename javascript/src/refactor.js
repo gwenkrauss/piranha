@@ -319,7 +319,7 @@ class RefactorEngine {
         var engine = this;
 
         estraverse.replace(this.ast, {
-            enter: function (node) {
+            enter: function(node) {
                 if (node.type === 'CallExpression') {
                     if (methodHashMap.has(node.callee.name)) {
                         const argumentIndex = methodHashMap.get(node.callee.name).argumentIndex;
@@ -331,6 +331,7 @@ class RefactorEngine {
                                 nodeArgumentIsFlag = nodeArgument.name === engine.flagname;
                                 break;
                             case 'Literal':
+                            case 'StringLiteral':
                                 nodeArgumentIsFlag = nodeArgument.value === engine.flagname;
                                 break;
                         }
@@ -363,7 +364,7 @@ class RefactorEngine {
         var engine = this;
 
         estraverse.replace(this.ast, {
-            leave: function (node) {
+            leave: function(node) {
                 if (node.type === 'LogicalExpression') {
                     var expression1 = node.left;
                     var expression2 = node.right;
@@ -403,7 +404,7 @@ class RefactorEngine {
         var engine = this;
 
         estraverse.replace(this.ast, {
-            leave: function (node) {
+            leave: function(node) {
                 if (
                     (node.type === 'IfStatement' || node.type === 'ConditionalExpression') &&
                     engine.isPiranhaLiteral(node.test)
@@ -433,13 +434,14 @@ class RefactorEngine {
 
         // Flatten any nested blocks introduced in the previous step by moving their contents to their parent
         estraverse.traverse(this.ast, {
-            leave: function (node, parent) {
+            leave: function(node, parent) {
                 if (node.type === 'BlockStatement' && (parent.type === 'BlockStatement' || parent.type === 'Program')) {
                     engine.moveCommentsToExtremeChildren(node, parent, engine.keep_comments);
                     var nodeIndex = parent.body.indexOf(node);
                     parent.body.splice(nodeIndex, 1, ...node.body);
                 }
             },
+            fallback: 'iteration',
         });
     }
 
@@ -453,7 +455,7 @@ class RefactorEngine {
 
         // Get a list of variable names which are assigned to a boolean literal
         estraverse.traverse(this.ast, {
-            enter: function (node) {
+            enter: function(node) {
                 if (node.type === 'VariableDeclaration') {
                     for (var i = 0; i < node.declarations.length; i++) {
                         const declaration = node.declarations[i];
@@ -485,7 +487,7 @@ class RefactorEngine {
 
         // Remove redundant variables by deleting declarations and replacing variable references
         estraverse.replace(this.ast, {
-            enter: function (node, parent) {
+            enter: function(node, parent) {
                 if (node.type === 'VariableDeclarator') {
                     if (node.id.name in assignments) {
                         engine.changed = true;
@@ -511,7 +513,7 @@ class RefactorEngine {
             },
 
             // After previous step, some declaration may have no declarators, delete them.
-            leave: function (node, parent) {
+            leave: function(node, parent) {
                 if (node.type === 'VariableDeclaration') {
                     if (node.declarations.length === 0) {
                         engine.preserveCommentsBasedOnOption(node, parent, engine.keep_comments);
@@ -534,7 +536,7 @@ class RefactorEngine {
 
         // Create a table mapping function names to number of return statements in them
         estraverse.traverse(this.ast, {
-            enter: function (node, parent) {
+            enter: function(node, parent) {
                 if (node.type === 'FunctionDeclaration') {
                     current = node.id.name;
                     numReturns[current] = 0;
@@ -578,7 +580,7 @@ class RefactorEngine {
         var engine = this;
 
         estraverse.traverse(this.ast, {
-            enter: function (node, parent) {
+            enter: function(node, parent) {
                 if (node.type === 'FunctionDeclaration' && singleReturnFunctions[node.id.name]) {
                     if (!engine.checkAndAddRedundantFunction(node, node.id.name, redundantFunctions)) {
                         this.skip();
@@ -616,7 +618,7 @@ class RefactorEngine {
         var engine = this;
 
         estraverse.replace(this.ast, {
-            enter: function (node, parent) {
+            enter: function(node, parent) {
                 if (node.type === 'FunctionDeclaration' && node.id.name in pruneList) {
                     if (engine.keep_comments) {
                         engine.moveAllCommentsToSiblings(node, parent);
@@ -638,7 +640,7 @@ class RefactorEngine {
                 }
             },
 
-            leave: function (node, parent) {
+            leave: function(node, parent) {
                 if (node.type === 'VariableDeclaration' && node.declarations.length === 0) {
                     engine.preserveCommentsBasedOnOption(node, parent, engine.keep_comments);
                     engine.changed = true;
@@ -657,11 +659,12 @@ class RefactorEngine {
         var engine = this;
 
         estraverse.traverse(this.ast, {
-            enter: function (node) {
+            enter: function(node) {
                 if (engine.isPiranhaLiteral(node)) {
                     delete node.createdByPiranha;
                 }
             },
+            fallback: 'iteration',
         });
     }
 
