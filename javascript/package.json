@@ -36,6 +36,8 @@
     "homepage": "https://github.com/uber/piranha/blob/master/javascript/README.md",
     "dependencies": {
         "argparse": "^1.0.10",
+        "babel-types": "^6.26.0",
+        "babylon": "^7.0.0-beta.47",
         "chai": "^4.2.0",
         "colors": "^1.4.0",
         "estraverse": "^5.1.0",
